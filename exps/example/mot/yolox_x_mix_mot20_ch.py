@@ -29,6 +29,8 @@ class Exp(MyExp):
         self.no_aug_epochs = 10
         self.basic_lr_per_img = 0.001 / 64.0
         self.warmup_epochs = 1
+        self.sample_rate = 0.01
+        self.data_dir = "/content/drive/MyDrive/해군AI경진대회 (2023)/Practice/datasets/MOT20"
 
     def get_data_loader(self, batch_size, is_distributed, no_aug=False):
         from yolox.data import (
@@ -41,7 +43,7 @@ class Exp(MyExp):
         )
 
         dataset = MOTDataset(
-            data_dir=os.path.join(get_yolox_datadir(), "mix_mot20_ch"),
+            data_dir=self.data_dir if self.data_dir else os.path.join(get_yolox_datadir(), "mix_mot20_ch"),
             json_file=self.train_ann,
             name='',
             img_size=self.input_size,
@@ -96,7 +98,7 @@ class Exp(MyExp):
         from yolox.data import MOTDataset, ValTransform
 
         valdataset = MOTDataset(
-            data_dir=os.path.join(get_yolox_datadir(), "MOT20"),
+            data_dir=self.data_dir if self.data_dir else os.path.join(get_yolox_datadir(), "MOT20"),
             json_file=self.val_ann,
             img_size=self.test_size,
             name='test', # change to train when running on training set
@@ -104,6 +106,7 @@ class Exp(MyExp):
                 rgb_means=(0.485, 0.456, 0.406),
                 std=(0.229, 0.224, 0.225),
             ),
+            sample_rate=self.sample_rate
         )
 
         if is_distributed:

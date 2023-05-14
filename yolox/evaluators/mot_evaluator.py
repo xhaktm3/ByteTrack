@@ -258,7 +258,7 @@ class MOTEvaluator:
         inference_time = 0
         track_time = 0
         n_samples = len(self.dataloader) - 1
-
+        
         if trt_file is not None:
             from torch2trt import TRTModule
 

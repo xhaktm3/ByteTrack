@@ -4,6 +4,9 @@ from pycocotools.coco import COCO
 
 import os
 
+import json
+import random
+
 from ..dataloading import get_yolox_datadir
 from .datasets_wrapper import Dataset
 
@@ -20,6 +23,7 @@ class MOTDataset(Dataset):
         name="train",
         img_size=(608, 1088),
         preproc=None,
+        sample_rate=1.0,
     ):
         """
         COCO dataset initialization. Annotation data are read into memory by COCO API.
@@ -35,8 +39,11 @@ class MOTDataset(Dataset):
             data_dir = os.path.join(get_yolox_datadir(), "mot")
         self.data_dir = data_dir
         self.json_file = json_file
-
-        self.coco = COCO(os.path.join(self.data_dir, "annotations", self.json_file))
+        self.sample_rate = sample_rate
+        
+        self.json_file = self._sample_data() if self.sample_rate != 1.0 else self.json_file
+        
+        self.coco = COCO(self.json_file)
         self.ids = self.coco.getImgIds()
         self.class_ids = sorted(self.coco.getCatIds())
         cats = self.coco.loadCats(self.coco.getCatIds())
@@ -51,6 +58,23 @@ class MOTDataset(Dataset):
 
     def _load_coco_annotations(self):
         return [self.load_anno_from_ids(_ids) for _ids in self.ids]
+
+    def _sample_data(self):
+        json_path = os.path.join(self.data_dir, "annotations", self.json_file)
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+        
+        new_data = {}
+        for k, v in data.items():
+            new_data[k] = random.sample(v, int(len(v)*self.sample_rate)) if k == 'images' else v
+
+        temp_path = json_path.replace('.json', f'_temp.json')
+        with open(temp_path, "w") as j:
+            json.dump(new_data, j)
+        
+        print(f"Sample Rate: {self.sample_rate}, temporary file: {temp_path}")
+
+        return temp_path
 
     def load_anno_from_ids(self, id_):
         im_ann = self.coco.loadImgs(id_)[0]
