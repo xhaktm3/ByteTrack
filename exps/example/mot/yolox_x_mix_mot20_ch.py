@@ -101,7 +101,7 @@ class Exp(MyExp):
             data_dir=self.data_dir if self.data_dir else os.path.join(get_yolox_datadir(), "MOT20"),
             json_file=self.val_ann,
             img_size=self.test_size,
-            name='test', # change to train when running on training set
+            name='train', # change to train when running on training set
             preproc=ValTransform(
                 rgb_means=(0.485, 0.456, 0.406),
                 std=(0.229, 0.224, 0.225),
